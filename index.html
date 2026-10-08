@@ -1,88 +1,269 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Benim Web Sitem</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            color: #222;
-            text-align: center;
-        }
+<title>Benim Dijital Atölyem</title>
 
-        header {
-            background: #111827;
-            color: white;
-            padding: 60px 20px;
-        }
+<style>
 
-        h1 {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
+* {
+    box-sizing: border-box;
+}
 
-        .container {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 20px;
-        }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f7fb;
+    color: #172033;
+}
 
-        .kartlar {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+/* ÜST MENÜ */
 
-        .kart {
-            background: white;
-            width: 250px;
-            padding: 30px 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        }
+nav {
+    background: #111827;
+    color: white;
+    padding: 18px 7%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-        .kart h2 {
-            margin-top: 0;
-        }
-    </style>
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 25px;
+}
+
+/* HERO */
+
+.hero {
+    background: linear-gradient(135deg, #111827, #2563eb);
+    color: white;
+    text-align: center;
+    padding: 100px 20px;
+}
+
+.hero h1 {
+    font-size: 48px;
+    margin: 0 0 20px;
+}
+
+.hero p {
+    font-size: 20px;
+    opacity: 0.9;
+}
+
+/* BUTON */
+
+.butona {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 14px 28px;
+    background: white;
+    color: #2563eb;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* GENEL ALAN */
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 70px 20px;
+}
+
+.baslik {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.baslik h2 {
+    font-size: 34px;
+    margin-bottom: 10px;
+}
+
+/* KARTLAR */
+
+.kartlar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 25px;
+}
+
+.kart {
+    background: white;
+    padding: 35px 25px;
+    border-radius: 18px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    transition: 0.3s;
+}
+
+.kart:hover {
+    transform: translateY(-7px);
+}
+
+.ikon {
+    font-size: 50px;
+    margin-bottom: 15px;
+}
+
+.kart h3 {
+    font-size: 22px;
+}
+
+.kart p {
+    color: #667085;
+    line-height: 1.6;
+}
+
+/* ALT KISIM */
+
+footer {
+    background: #111827;
+    color: white;
+    text-align: center;
+    padding: 30px 20px;
+    margin-top: 30px;
+}
+
+</style>
 </head>
 
 <body>
 
-    <header>
-        <h1>Benim Dijital Atölyem</h1>
-        <p>Yapay zekâ, eğitim uygulamaları ve dijital projeler</p>
-    </header>
+<nav>
 
-    <div class="container">
+<div class="logo">
+🧠 Dijital Atölyem
+</div>
 
-        <h2>Projelerim</h2>
+<div>
+<a href="#projeler">Projeler</a>
+<a href="#hakkimda">Hakkımda</a>
+</div>
 
-        <div class="kartlar">
+</nav>
 
-            <div class="kart">
-                <h2>📱 Uygulamalar</h2>
-                <p>Hazırladığım eğitim ve yapay zekâ uygulamaları.</p>
-            </div>
 
-            <div class="kart">
-                <h2>🎬 Videolar</h2>
-                <p>Hazırladığım videolar ve animasyonlar.</p>
-            </div>
+<section class="hero">
 
-            <div class="kart">
-                <h2>🖼️ Galeri</h2>
-                <p>Hazırladığım görseller ve tasarımlar.</p>
-            </div>
+<h1>Benim Dijital Atölyem</h1>
 
-        </div>
+<p>
+Yapay zekâ, eğitim uygulamaları ve dijital projeler
+</p>
 
-    </div>
+<a class="butona" href="#projeler">
+Projelerimi Keşfet
+</a>
+
+</section>
+
+
+<section class="container" id="projeler">
+
+<div class="baslik">
+
+<h2>Projelerim</h2>
+
+<p>
+Hazırladığım dijital çalışmalar
+</p>
+
+</div>
+
+
+<div class="kartlar">
+
+
+<div class="kart">
+
+<div class="ikon">📱</div>
+
+<h3>Uygulamalar</h3>
+
+<p>
+Eğitim ve yapay zekâ destekli hazırladığım interaktif uygulamalar.
+</p>
+
+</div>
+
+
+<div class="kart">
+
+<div class="ikon">🤖</div>
+
+<h3>Yapay Zekâ</h3>
+
+<p>
+Yapay zekâ ile geliştirdiğim projeler ve deneysel çalışmalar.
+</p>
+
+</div>
+
+
+<div class="kart">
+
+<div class="ikon">🎬</div>
+
+<h3>Videolar</h3>
+
+<p>
+Hazırladığım eğitim videoları, animasyonlar ve motion grafikler.
+</p>
+
+</div>
+
+
+<div class="kart">
+
+<div class="ikon">🖼️</div>
+
+<h3>Galeri</h3>
+
+<p>
+Hazırladığım görseller, tasarımlar ve infografikler.
+</p>
+
+</div>
+
+
+</div>
+
+</section>
+
+
+<section class="container" id="hakkimda">
+
+<div class="baslik">
+
+<h2>Hakkımda</h2>
+
+<p>
+Dijital eğitim materyalleri, interaktif uygulamalar
+ve yapay zekâ destekli projeler geliştiriyorum.
+</p>
+
+</div>
+
+</section>
+
+
+<footer>
+
+© 2026 Benim Dijital Atölyem
+
+</footer>
 
 </body>
 </html>
