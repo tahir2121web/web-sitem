@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fıkıh Atölyesi - 2025 Dijital Eğitim Portalı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            scroll-behavior: smooth;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-active {
+            background-color: var(--primary);
+            color: white !important;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Card Flip Animation */
+        .card-inner {
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+        .is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            border-radius: 1.5rem;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .teacher-quote {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 5px solid #3b82f6;
+            position: relative;
+        }
+
+        .teacher-quote::before {
+            content: "\f10d";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 2rem;
+            color: rgba(59, 130, 246, 0.1);
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .animate-pulse-soft { animation: pulse-soft 3s infinite; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-[100] glass border-b border-slate-200 py-3 px-4 md:px-8">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4 cursor-pointer" onclick="showSection('home')">
+                <div class="bg-blue-600 p-2.5 rounded-2xl shadow-lg shadow-blue-200">
+                    <i class="fas fa-book-open text-white text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-600">Fıkıh Atölyesi</h1>
+            </div>
+            
+            <div id="main-nav" class="flex items-center bg-slate-100 p-1.5 rounded-2xl gap-1 overflow-x-auto max-w-full no-scrollbar">
+                <button onclick="showSection('home')" id="nav-home" class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap text-slate-600">Ana Sayfa</button>
+                <button onclick="showSection('principles')" id="nav-principles" class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap text-slate-600">İlkeler</button>
+                <button onclick="showSection('sources')" id="nav-sources" class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap text-slate-600">Ayet & Hadis</button>
+                <button onclick="showSection('cards')" id="nav-cards" class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap text-slate-600">Kavramlar</button>
+                <button onclick="showSection('quiz')" id="nav-quiz" class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap text-slate-600">Şölen (Bilgi Testi)</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 md:py-12">
+
+        <!-- HOME -->
+        <section id="sec-home" class="space-y-12 transition-all duration-500">
+            <div class="relative rounded-[3rem] overflow-hidden bg-slate-900 text-white shadow-2xl">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent"></div>
+                <div class="relative z-10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12">
+                    <div class="flex-1 space-y-6">
+                        <span class="inline-block px-4 py-1.5 rounded-full bg-blue-500/20 text-blue-300 text-sm font-bold border border-blue-500/30">2025 YKS/ÖABT Uyumlu</span>
+                        <h2 class="text-4xl md:text-6xl font-black leading-[1.1]">Zihninizi Fıkıh İle Aydınlatın.</h2>
+                        <p class="text-lg text-slate-300 max-w-xl">Ders kitaplarındaki kuru bilgileri; hayatın içinden hikayeler, interaktif kartlar ve heyecan dolu yarışmalarla birleştirdik.</p>
+                        <div class="flex flex-wrap gap-4 pt-4">
+                            <button onclick="showSection('principles')" class="bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-2xl font-bold shadow-lg shadow-blue-900/20 transition-all hover:scale-105">Hemen Başla</button>
+                            <button onclick="showSection('quiz')" class="bg-slate-800 hover:bg-slate-700 px-8 py-4 rounded-2xl font-bold transition-all border border-slate-700">Bilgini Test Et</button>
+                        </div>
+                    </div>
+                    <div class="hidden lg:block flex-1">
+                        <div class="bg-white/5 p-8 rounded-[3rem] backdrop-blur-sm border border-white/10 animate-pulse-soft">
+                            <div class="flex gap-4 mb-6">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                            </div>
+                            <div class="space-y-4 font-mono text-sm">
+                                <p class="text-blue-400"># Fıkıh Temel İlke 01</p>
+                                <p class="text-emerald-400">if (kolaylik_gerekli) { <br>&nbsp;&nbsp;uygula(RUHSAT); <br>}</p>
+                                <p class="text-slate-400">// İslam zorluk değil, kolaylık diler.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+                    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 text-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Kolaylık Esası</h3>
+                    <p class="text-slate-500 leading-relaxed">İslam hukukunun ruhundaki "teysir" (kolaylaştırma) prensibi ile ibadetler her şartta sürdürülebilir.</p>
+                </div>
+                <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+                    <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6 text-2xl group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Geniş Helal Alanı</h3>
+                    <p class="text-slate-500 leading-relaxed">Eşyada asıl olan mubahlıktır. Yasak olanlar sınırlı, helal olanlar sonsuzdur.</p>
+                </div>
+                <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+                    <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6 text-2xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                        <i class="fas fa-scale-balanced"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Sarsılmaz Adalet</h3>
+                    <p class="text-slate-500 leading-relaxed">Hukuk önünde herkesin eşitliği ve hakkın sahibine teslimi fıkhın temel gayesidir.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRINCIPLES -->
+        <section id="sec-principles" class="hidden space-y-8">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <h2 class="text-4xl font-black text-slate-900 mb-4">Temel Fıkıh İlkeleri</h2>
+                <div class="h-1.5 w-24 bg-blue-600 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Kolaylık -->
+                <div onclick="openPrinciple('kolaylik')" class="cursor-pointer group">
+                    <div class="bg-white p-8 rounded-[2rem] border-2 border-transparent hover:border-emerald-500 transition-all shadow-sm flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-2xl mb-6">
+                            <i class="fas fa-hand-holding-heart"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Tekliflerde Kolaylık</h3>
+                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase">İncele</span>
+                    </div>
+                </div>
+                <!-- Helal -->
+                <div onclick="openPrinciple('helal')" class="cursor-pointer group">
+                    <div class="bg-white p-8 rounded-[2rem] border-2 border-transparent hover:border-amber-500 transition-all shadow-sm flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-2xl mb-6">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Helallerde Genişlik</h3>
+                        <span class="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full uppercase">İncele</span>
+                    </div>
+                </div>
+                <!-- Kamu -->
+                <div onclick="openPrinciple('kamu')" class="cursor-pointer group">
+                    <div class="bg-white p-8 rounded-[2rem] border-2 border-transparent hover:border-blue-500 transition-all shadow-sm flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-2xl mb-6">
+                            <i class="fas fa-users-gear"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Kamu Yararı</h3>
+                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase">İncele</span>
+                    </div>
+                </div>
+                <!-- Adalet -->
+                <div onclick="openPrinciple('adalet')" class="cursor-pointer group">
+                    <div class="bg-white p-8 rounded-[2rem] border-2 border-transparent hover:border-purple-500 transition-all shadow-sm flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center text-2xl mb-6">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Adaleti Gözetmek</h3>
+                        <span class="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full uppercase">İncele</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Principle Detail Container -->
+            <div id="principle-detail" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div class="bg-white rounded-[3rem] shadow-xl p-8 md:p-12 relative border border-slate-100">
+                    <button onclick="closePrinciple()" class="absolute top-8 right-8 text-slate-400 hover:text-slate-900">
+                        <i class="fas fa-circle-xmark text-3xl"></i>
+                    </button>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                        <div class="lg:col-span-5 space-y-8">
+                            <div id="p-header" class="space-y-4"></div>
+                            <div id="p-teacher" class="teacher-quote p-6 rounded-3xl italic text-slate-700 leading-relaxed"></div>
+                        </div>
+                        <div class="lg:col-span-7 space-y-8">
+                            <div class="bg-slate-50 p-8 rounded-[2rem]">
+                                <h4 class="font-bold text-slate-900 mb-4 flex items-center gap-2 text-xl">
+                                    <i class="fas fa-circle-info text-blue-500"></i> Kavramsal Tanım
+                                </h4>
+                                <p id="p-desc" class="text-slate-600 leading-relaxed text-lg"></p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 mb-6 flex items-center gap-2 text-xl">
+                                    <i class="fas fa-lightbulb text-amber-500"></i> Uygulama Örnekleri
+                                </h4>
+                                <div id="p-examples" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SOURCES -->
+        <section id="sec-sources" class="hidden space-y-12">
+            <div class="text-center max-w-2xl mx-auto">
+                <h2 class="text-4xl font-black text-slate-900">Ayet ve Hadis Havuzu</h2>
+                <p class="text-slate-500 mt-3 italic">Ruhu'l-Furkan Tefsiri Işığında Hükümlerin Hikmet ve Derinlikleri</p>
+                <div class="h-1.5 w-32 bg-blue-600 mx-auto rounded-full mt-4"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Ayetler -->
+                <div class="space-y-4">
+                    <h3 class="flex items-center gap-3 text-xl font-black text-emerald-700 bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                        <i class="fas fa-quran"></i> Kur'an-ı Kerim Ayetleri
+                    </h3>
+                    <div id="list-ayet" class="space-y-4"></div>
+                </div>
+                <!-- Hadisler -->
+                <div class="space-y-4">
+                    <h3 class="flex items-center gap-3 text-xl font-black text-amber-700 bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                        <i class="fas fa-scroll"></i> Sünnet-i Seniyye (Hadisler)
+                    </h3>
+                    <div id="list-hadis" class="space-y-4"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CARDS -->
+        <section id="sec-cards" class="hidden space-y-12">
+            <div class="text-center">
+                <h2 class="text-4xl font-black text-slate-900">Kavram Kartları</h2>
+                <p class="text-slate-500 mt-2">Öğrenmek için kartlara tıkla ve çevir.</p>
+            </div>
+            <div id="grid-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6"></div>
+        </section>
+
+        <!-- QUIZ -->
+        <section id="sec-quiz" class="hidden max-w-4xl mx-auto">
+            <div id="quiz-intro" class="text-center py-20 bg-white rounded-[3rem] shadow-xl p-8 border border-slate-100">
+                <div class="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-8 animate-bounce">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h2 class="text-4xl font-black text-slate-900 mb-6">Bilgi Şöleni Yarışması</h2>
+                <p class="text-lg text-slate-500 mb-10 max-w-lg mx-auto">Grup A ve Grup B olarak yarışın veya tek başına kendini dene. Her doğru cevap 10 puan!</p>
+                <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white px-16 py-5 rounded-3xl font-black text-xl shadow-xl transition-all transform hover:scale-110">BAŞLAT</button>
+            </div>
+
+            <div id="quiz-active" class="hidden space-y-6">
+                <div id="quiz-turn" class="p-6 rounded-[2rem] text-center font-black text-2xl text-white shadow-xl transform transition-all duration-500"></div>
+                
+                <div class="bg-white p-8 md:p-12 rounded-[3rem] shadow-2xl border border-slate-100">
+                    <div class="flex justify-between items-center mb-10">
+                        <div class="flex items-center gap-4 md:gap-8">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Soru</span>
+                                <span id="quiz-progress" class="text-2xl font-black text-slate-800">1 / 10</span>
+                            </div>
+                            <button onclick="startQuiz()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-600 rounded-xl font-bold transition-all text-sm group" title="Testi Baştan Al">
+                                <i class="fas fa-rotate-right group-hover:rotate-180 transition-transform duration-500"></i> <span class="hidden sm:inline">Baştan Al</span>
+                            </button>
+                        </div>
+                        <div class="flex gap-2 md:gap-4">
+                            <div class="bg-blue-50 border border-blue-100 px-4 md:px-6 py-3 rounded-2xl flex flex-col items-center">
+                                <span class="text-[10px] font-bold text-blue-400 uppercase">Grup A</span>
+                                <span id="score-a" class="text-xl font-black text-blue-700">0</span>
+                            </div>
+                            <div class="bg-rose-50 border border-rose-100 px-4 md:px-6 py-3 rounded-2xl flex flex-col items-center">
+                                <span class="text-[10px] font-bold text-rose-400 uppercase">Grup B</span>
+                                <span id="score-b" class="text-xl font-black text-rose-700">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 id="quiz-question" class="text-2xl md:text-3xl font-bold text-slate-800 mb-10 leading-tight"></h3>
+                    
+                    <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+
+            <div id="quiz-result" class="hidden text-center bg-white p-16 rounded-[4rem] shadow-2xl border-4 border-blue-500/10">
+                <div id="res-icon" class="text-8xl mb-8"></div>
+                <h2 id="res-winner" class="text-5xl font-black mb-6 text-slate-900"></h2>
+                <div class="flex justify-center gap-12 mb-12">
+                    <div class="text-center">
+                        <div class="text-slate-400 font-bold mb-1 uppercase text-xs">Grup A Skoru</div>
+                        <div id="final-a" class="text-4xl font-black text-blue-600">0</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-slate-400 font-bold mb-1 uppercase text-xs">Grup B Skoru</div>
+                        <div id="final-b" class="text-4xl font-black text-rose-600">0</div>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="startQuiz()" class="bg-blue-600 text-white px-10 py-5 rounded-3xl font-black hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-3">
+                        <i class="fas fa-rotate-right"></i> Testi Baştan Al
+                    </button>
+                    <button onclick="showSection('home')" class="bg-slate-900 text-white px-10 py-5 rounded-3xl font-black hover:bg-slate-800 transition-all flex items-center justify-center gap-3">
+                        <i class="fas fa-home"></i> Ana Menüye Dön
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal for Ayet/Hadis Details -->
+    <div id="modal-overlay" class="hidden fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300">
+            <div id="modal-accent" class="h-4 w-full"></div>
+            <div class="p-8 md:p-12 space-y-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <div class="flex justify-between items-start">
+                    <div class="space-y-1">
+                        <span id="modal-label" class="text-xs font-black uppercase px-3 py-1 rounded-full"></span>
+                        <h4 id="modal-title" class="text-3xl font-black text-slate-900"></h4>
+                    </div>
+                    <button onclick="closeModal()" class="text-slate-300 hover:text-slate-900 transition-colors">
+                        <i class="fas fa-times-circle text-3xl"></i>
+                    </button>
+                </div>
+
+                <div class="bg-slate-50 p-8 rounded-[2rem] border-l-8 border-blue-500 italic text-xl text-slate-700 relative">
+                    <span id="modal-quote"></span>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <h5 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                            <i class="fas fa-book-open-reader text-blue-500"></i> Ruhu'l-Furkan Tefsiri ve Hikmet
+                        </h5>
+                        <p id="modal-meaning" class="text-slate-600 leading-relaxed text-sm md:text-base"></p>
+                    </div>
+                    <div class="flex items-center gap-3 bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-link text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-blue-400 uppercase leading-none mb-1">İlgili Fıkıh İlkesi</p>
+                            <p id="modal-principle" class="font-bold text-blue-900"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="closeModal()" class="w-full bg-slate-100 hover:bg-slate-200 py-4 rounded-2xl font-bold transition-all text-slate-700">Anladım, Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const principlesData = {
+            kolaylik: {
+                t: "Tekliflerde Kolaylık",
+                i: "fa-hand-holding-heart",
+                c: "emerald",
+                s: "Geçen yıl bir öğrencim kolu kırıldığı için abdest almakta zorlanıyordu. Ona dinimizdeki 'mesh' ve 'teyemmüm' kolaylıklarını anlattığımda gözlerindeki o rahatlama ifadesini hiç unutamam. Allah kuluna asla gücünün yetmeyeceği şeyi yüklemez.",
+                d: "İslam dini zorluğu değil, kolaylığı esas alır. İnsanın gücünü aşan veya hayati tehlike oluşturan durumlarda 'ruhsat' adı verilen özel izinler devreye girer. Bu, dinin yaşanabilirliğini sağlar.",
+                e: ["Yolculukta namazların kısaltılması", "Hastalıkta oturarak namaz", "Su yoksa teyemmüm", "Mest üzerine mesh", "Zaruret halinde haramın mubahlaşması"]
+            },
+            helal: {
+                t: "Helallerde Genişlik",
+                i: "fa-leaf",
+                c: "amber",
+                s: "Bir piknik sırasında öğrencilerim 'Hocam her şey yasak mı?' diye sormuşlardı. Etrafımızdaki binlerce çeşit bitkiyi ve ağacı gösterdim: 'Bakın çocuklar, yasak olan sadece birkaçı, geri kalan her şey sizin için.'",
+                d: "Fıkıhta 'Eşyada asıl olan mubahlıktır' kuralı hakimdir. Bir şeyin haram olduğuna dair kesin bir delil yoksa, o şey helaldir. İnsanoğlu için helal dairesi haramdan kat kat geniştir.",
+                e: ["Temiz gıdaların tümü", "İyi niyetli teknoloji kullanımı", "Kurallara uygun ticaret", "Faydalı spor ve sanatlar", "Güzellik katan giyim kuşam"]
+            },
+            kamu: {
+                t: "Kamu Yararı (Maslahat)",
+                i: "fa-users-gear",
+                c: "blue",
+                s: "Okul yolundaki bir inşaatın güvenliği için yolun kapatılmasına bazı veliler itiraz etmişti. Onlara bu ilkeyi hatırlattım: Birkaç dakikalık gecikme, tüm çocukların can güvenliğinden daha önemli olamaz.",
+                d: "Bireysel çıkarlarla toplumun genel huzuru çatıştığında, toplumun yararı öncelenir. 'Zararı önlemek, fayda sağlamaktan öncedir' kuralı bu ilkenin bir sonucudur.",
+                e: ["Yol genişletme çalışmaları", "Salgın döneminde karantina", "Çevre koruma yasaları", "Halk sağlığı denetimleri", "Şehir planlaması ve parklar"]
+            },
+            adalet: {
+                t: "Adaleti Gözetmek",
+                i: "fa-balance-scale",
+                c: "purple",
+                s: "Sınav kağıtlarını okurken bazen sevdiğim bir öğrencinin hata yaptığını görürüm. O an duygularımı bir kenara bırakıp adaletin gereğini yaparım. Çünkü adalet olmazsa güven de olmaz.",
+                d: "Adalet, her şeyi olması gereken yere koymak ve hakkı sahibine tam olarak teslim etmektir. İslam hukukunun temel amacı yeryüzünde adaleti tesis etmektir.",
+                e: ["Liyakate göre görevlendirme", "Dürüst şahitlik", "Mirasta hakkaniyetli paylaşım", "İşçiye hakkını tam vermek", "Yargı önünde eşitlik"]
+            }
+        };
+
+        const ayetler = [
+            { 
+                id: 1, 
+                title: "Bakara, 185", 
+                quote: "Allah sizin için kolaylık diler, zorluk dilemez.", 
+                meaning: "Ruhu’l-Furkan Tefsiri’nde bu ayet-i kerime açıklanırken Mevlâ Teâlâ’nın kullarına olan sonsuz şefkati ve merhameti üzerinde durulur. Mahmud Ustaosmanoğlu Hazretleri, İslam’ın özünün 'teshil' yani kolaylaştırma olduğunu belirtir. Tefsirde, Ramazan orucu gibi nefse ağır gelebilecek bir ibadetin hemen ardından bu ifadenin geçmesi, dinin bir 'azap' değil, 'rahmet' yolu olduğunun ispatıdır. İnsan fıtratının zayıf yaratılması hasebiyle, şartlar ağırlaştığında ilahi irade kuluna çıkış yolları (teyemmüm, namazın kısaltılması vb.) lütfeder. Kolaylık, İslam'ın bir rüknüdür.", 
+                principle: "Tekliflerde Kolaylık", 
+                type: "Ayet" 
+            },
+            { 
+                id: 2, 
+                title: "Bakara, 29", 
+                quote: "O, yeryüzünde olanların hepsini sizin için yarattı.", 
+                meaning: "Ruhu’l-Furkan’da bu ayet, mahlukatın insan emrine birer nimet ve ibret olarak verildiğinin delilidir. Tefsirde 'Sizin için' (Lekum) ifadesi üzerinde hassasiyetle durulur; bu dünya sofrası mümin-kafir ayırt etmeksizin tüm kulların istifadesine sunulmuş bir ikramdır. Fıkhi olarak bu ayet, 'Eşyada asıl olan mubahlıktır' kaidesinin en büyük mesnedidir. Mevlâ, haramları ancak kulunun hem dünyevi hem uhrevi selametini korumak için sınırlı tutmuştur. Yasaklanan bir ağaca karşılık, tüm cennet meyveleri insanın emrindedir.", 
+                principle: "Helallerde Genişlik", 
+                type: "Ayet" 
+            },
+            { 
+                id: 3, 
+                title: "Nahl, 90", 
+                quote: "Şüphesiz Allah adaleti ve iyiliği emreder.", 
+                meaning: "Ruhu’l-Furkan tefsiri, bu ayetin Kur'an-ı Kerim'in en kapsamlı emirlerinden biri olduğunu vurgular. Adalet (adl), her şeyi Mevlâ'nın koyduğu hudutlar çerçevesinde yerli yerine koymaktır. Tefsirde buyurulur ki; adalet mizan demektir. Mizanın bozulması, kainatın ve toplumun huzurunun bozulmasıdır. Fıkıh ilmi, bu adaletin hayattaki ölçülerini belirler. İyilik (ihsan) ise, adaletin de ötesine geçerek bir işi Allah görüyormuşçasına en güzel şekilde yapmaktır. Adalet bir toplumun direği, ihsan ise o toplumun ruhudur.", 
+                principle: "Adaleti Gözetmek", 
+                type: "Ayet" 
+            }
+        ];
+
+        const hadisler = [
+            { 
+                id: 4, 
+                title: "Buhari / Müslim", 
+                quote: "Kolaylaştırınız, zorlaştırmayınız; müjdeleyiniz, nefret ettirmeyiniz.", 
+                meaning: "Efendimiz (s.a.v.)'in bu emri, İslam hukukunun metodolojisini belirler. Ruhu'l-Furkan eksenli bir bakışla, dinin tebliğinde ve uygulanmasında nefsi ürküten, gönlü daraltan bir üsluptan kaçınılması gerektiği anlaşılır. Fıkıh alimleri bu hadisi şiar edinerek 'Meşakkat gelince teshil (kolaylık) tahakkuk eder' kuralını işletmişlerdir. Bir mümin fıkhı uygularken, insanları Allah’ın kapısından soğutan bir sertlikte değil, o kapıya ısındıran bir merhametle hareket etmelidir. Müjdeleme, fıkhın ruhundaki teshildir.", 
+                principle: "Tekliflerde Kolaylık / Teshil Metodu", 
+                type: "Hadis" 
+            },
+            { 
+                id: 5, 
+                title: "İbn Mâce", 
+                quote: "Zarar vermek ve zarara zararla karşılık vermek yoktur.", 
+                meaning: "Mecelle'nin en temel kaidelerinden olan 'Zarar izale olunur' (Zarar giderilir) ilkesinin kaynağı bu hadis-i şeriftir. Ruhu'l-Furkan penceresinden; kul hakkının ehemmiyeti ve toplumun selametinin şahsi çıkarlardan önce geldiği vurgulanır. İslam hukukunda zarar verme kastı bütünüyle reddedilmiştir. Birine zarar verilmişse, buna mukabele olarak başka bir zarar (intikam) değil, ancak adaletle telafi (tazminat/ceza) uygulanabilir. Kamu yararı, bireylerin birbirine zarar vermesini engelleyen ilahi bir kalkandır.", 
+                principle: "Kamu Yararı ve Zararın Önlenmesi", 
+                type: "Hadis" 
+            }
+        ];
+
+        const cards = [
+            { f: "Fıkıh", b: "İslâm hukukunun detaylarını ve uygulama yöntemlerini inceleyen bilim dalıdır.", c: "bg-blue-600" },
+            { f: "Azimet", b: "Olağan durumlarda herkes için geçerli olan genel dini hükümlerdir.", c: "bg-emerald-600" },
+            { f: "Ruhsat", b: "Özel durumlarda tanınan kolaylaştırılmış hükümleri ifade eder.", c: "bg-amber-600" },
+            { f: "Mubah", b: "Yapılmasında veya terkedilmesinde dinen bir sakınca olmayan işler.", c: "bg-indigo-600" },
+            { f: "Haram", b: "Allah'ın kesin olarak yasakladığı eylemlerdir (İçki, kumar vb.).", c: "bg-rose-600" },
+            { f: "Farz", b: "Yapılması kesin olarak emredilen davranışlardır.", c: "bg-cyan-600" },
+            { f: "Vacip", b: "Farz kadar kesin olmasa da emredilen yükümlülüklerdir (Kurban gibi).", c: "bg-purple-600" },
+            { f: "Mekruh", b: "Yapılması dinen hoş karşılanmayan, çirkin bulunan işler.", c: "bg-orange-600" },
+            { f: "Sünnet", b: "Hz. Peygamber'in tavsiye ettiği ve bizzat uyguladığı davranışlar.", c: "bg-teal-600" },
+            { f: "Mendup", b: "Yapılması sevap olan ancak zorunlu olmayan davranışlar.", c: "bg-slate-700" }
+        ];
+
+        const questions = [
+            { q: "Su bulunmadığında teyemmüm yapılması hangi ilke ile doğrudan ilgilidir?", options: ["Adalet", "Kolaylık", "Mekruh", "Haram"], correct: 1 },
+            { q: "Haram olduğuna dair kesin delil olmayan bir eylem ne olarak kabul edilir?", options: ["Sünnet", "Haram", "Mubah", "Vacip"], correct: 2 },
+            { q: "Yol genişletmek için bir evin bedeli ödenerek yıkılması hangi ilkedir?", options: ["Kamu Yararı", "Adalet", "Helallik", "Azimet"], correct: 0 },
+            { q: "Namazın vaktinde ve tam kılınması durumuna ne ad verilir?", options: ["Ruhsat", "Azimet", "Kaza", "İhlas"], correct: 1 },
+            { q: "Hakkın sahibine teslim edilmesi fıkhın hangi temel ilkesidir?", options: ["Kolaylık", "Mubahlık", "Adalet", "Temsil"], correct: 2 },
+            { q: "İslam dininin genel ruhunu ifade eden 'Teysir' ne demektir?", options: ["Zorlaştırma", "Kolaylaştırma", "Güzelleştirme", "Yasaklama"], correct: 1 },
+            { q: "Zararı önlemek, fayda sağlamaktan önce gelir kuralı hangisiyle ilgilidir?", options: ["Adalet", "Kamu Yararı", "Mubahlık", "Ruhsat"], correct: 1 },
+            { q: "Aşağıdakilerden hangisi ef'al-i mükellefin kapsamında bir yasaktır?", options: ["Farz", "Vacip", "Haram", "Mendup"], correct: 2 },
+            { q: "Fıkıh biliminin diğer adı nedir?", options: ["Tefsir", "İslam Hukuku", "Akaid", "Siyer"], correct: 1 },
+            { q: "Mest üzerine mesh etme süresi mukim olanlar için ne kadardır?", options: ["12 Saat", "24 Saat", "48 Saat", "72 Saat"], correct: 1 }
+        ];
+
+        // --- Logic ---
+        let currentSection = 'home';
+        let quizIdx = 0;
+        let scores = { A: 0, B: 0 };
+        let quizTurn = 'A';
+
+        function showSection(id) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('sec-' + id).classList.remove('hidden');
+            
+            document.querySelectorAll('#main-nav button').forEach(b => b.classList.remove('nav-active'));
+            const btn = document.getElementById('nav-' + id);
+            if(btn) btn.classList.add('nav-active');
+
+            if(id === 'sources') renderSources();
+            if(id === 'cards') renderCards();
+            window.scrollTo(0,0);
+        }
+
+        // Principles Detail Logic
+        function openPrinciple(id) {
+            const d = principlesData[id];
+            const container = document.getElementById('principle-detail');
+            container.classList.remove('hidden');
+            
+            document.getElementById('p-header').innerHTML = `
+                <div class="w-20 h-20 bg-${d.c}-100 text-${d.c}-600 rounded-3xl flex items-center justify-center text-3xl mb-4">
+                    <i class="fas ${d.i}"></i>
+                </div>
+                <h3 class="text-4xl font-black text-slate-900">${d.t}</h3>
+            `;
+            document.getElementById('p-teacher').innerText = d.s;
+            document.getElementById('p-desc').innerText = d.d;
+            document.getElementById('p-examples').innerHTML = d.e.map(ex => `
+                <div class="bg-white p-4 border border-slate-100 rounded-2xl shadow-sm flex items-center gap-3 transition-all hover:scale-[1.02]">
+                    <i class="fas fa-check-circle text-${d.c}-500 text-xl"></i>
+                    <span class="font-semibold text-slate-700">${ex}</span>
+                </div>
+            `).join('');
+            
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function closePrinciple() {
+            document.getElementById('principle-detail').classList.add('hidden');
+        }
+
+        // Sources Logic
+        function renderSources() {
+            const ayetCont = document.getElementById('list-ayet');
+            const hadisCont = document.getElementById('list-hadis');
+
+            ayetCont.innerHTML = ayetler.map(a => `
+                <div onclick="openModal(${JSON.stringify(a).replace(/"/g, '&quot;')})" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-emerald-200 transition-all group flex justify-between items-center">
+                    <div>
+                        <h4 class="font-bold text-slate-800">${a.title}</h4>
+                        <p class="text-sm text-slate-400">Kur'an-ı Kerim Ayeti</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-slate-300 group-hover:text-emerald-500 transition-colors"></i>
+                </div>
+            `).join('');
+
+            hadisCont.innerHTML = hadisler.map(h => `
+                <div onclick="openModal(${JSON.stringify(h).replace(/"/g, '&quot;')})" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:border-amber-200 transition-all group flex justify-between items-center">
+                    <div>
+                        <h4 class="font-bold text-slate-800">${h.title}</h4>
+                        <p class="text-sm text-slate-400">Hadis-i Şerif</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-slate-300 group-hover:text-amber-500 transition-colors"></i>
+                </div>
+            `).join('');
+        }
+
+        function openModal(data) {
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-label').innerText = data.type;
+            document.getElementById('modal-label').className = `text-xs font-black uppercase px-3 py-1 rounded-full ${data.type === 'Ayet' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`;
+            document.getElementById('modal-accent').className = `h-4 w-full ${data.type === 'Ayet' ? 'bg-emerald-500' : 'bg-amber-500'}`;
+            document.getElementById('modal-quote').innerText = `"${data.quote}"`;
+            document.getElementById('modal-meaning').innerText = data.meaning;
+            document.getElementById('modal-principle').innerText = data.principle;
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Cards Logic
+        function renderCards() {
+            document.getElementById('grid-cards').innerHTML = cards.map(c => `
+                <div class="h-[280px] group perspective" onclick="this.classList.toggle('is-flipped')">
+                    <div class="card-inner relative w-full h-full duration-500">
+                        <div class="card-front absolute inset-0 glass border-2 border-slate-100 flex flex-col items-center justify-center p-6 text-center shadow-sm">
+                            <i class="fas fa-bookmark text-blue-500 text-3xl mb-4 opacity-20"></i>
+                            <h3 class="text-2xl font-black text-slate-800">${c.f}</h3>
+                            <p class="text-[10px] font-bold text-slate-400 mt-4 uppercase tracking-widest">Çevirmek İçin Tıkla</p>
+                        </div>
+                        <div class="card-back absolute inset-0 ${c.c} rounded-[1.5rem] flex items-center justify-center p-8 text-center text-white font-bold leading-relaxed shadow-xl">
+                            <p>${c.b}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Quiz Logic
+        function startQuiz() {
+            quizIdx = 0;
+            scores = { A: 0, B: 0 };
+            quizTurn = 'A';
+            document.getElementById('quiz-intro').classList.add('hidden');
+            document.getElementById('quiz-active').classList.remove('hidden');
+            document.getElementById('quiz-result').classList.add('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = questions[quizIdx];
+            document.getElementById('quiz-turn').innerText = `SIRA: GRUP ${quizTurn}`;
+            document.getElementById('quiz-turn').className = `p-6 rounded-[2rem] text-center font-black text-2xl text-white shadow-xl transition-all duration-500 ${quizTurn === 'A' ? 'bg-blue-600' : 'bg-rose-600'}`;
+            document.getElementById('quiz-progress').innerText = `${quizIdx + 1} / ${questions.length}`;
+            document.getElementById('score-a').innerText = scores.A;
+            document.getElementById('score-b').innerText = scores.B;
+            document.getElementById('quiz-question').innerText = q.q;
+
+            const optBox = document.getElementById('quiz-options');
+            optBox.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "p-5 rounded-2xl border-2 border-slate-100 text-left font-bold text-slate-700 hover:border-blue-500 hover:bg-blue-50 transition-all flex items-center gap-4 group";
+                btn.innerHTML = `
+                    <span class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">${String.fromCharCode(65 + idx)}</span>
+                    ${opt}
+                `;
+                btn.onclick = () => handleAnswer(idx);
+                optBox.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(choice) {
+            const correct = questions[quizIdx].correct;
+            if(choice === correct) {
+                scores[quizTurn] += 10;
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+
+            quizIdx++;
+            quizTurn = quizTurn === 'A' ? 'B' : 'A';
+
+            if(quizIdx < questions.length) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function finishQuiz() {
+            document.getElementById('quiz-active').classList.add('hidden');
+            const res = document.getElementById('quiz-result');
+            res.classList.remove('hidden');
+            
+            document.getElementById('final-a').innerText = scores.A;
+            document.getElementById('final-b').innerText = scores.B;
+
+            const winTitle = document.getElementById('res-winner');
+            const winIcon = document.getElementById('res-icon');
+            
+            if(scores.A > scores.B) {
+                winTitle.innerText = "TEBRİKLER! KAZANAN: GRUP A";
+                winIcon.innerText = "🏆";
+                res.className = res.className.replace(/border-.*-500/g, '') + " border-blue-500";
+            } else if(scores.B > scores.A) {
+                winTitle.innerText = "TEBRİKLER! KAZANAN: GRUP B";
+                winIcon.innerText = "🏆";
+                res.className = res.className.replace(/border-.*-500/g, '') + " border-rose-500";
+            } else {
+                winTitle.innerText = "MUHTEŞEM DOSTLUK: BERABERE!";
+                winIcon.innerText = "🤝";
+            }
+            
+            confetti({ particleCount: 400, spread: 160, origin: { y: 0.3 } });
+        }
+
+        window.onload = () => showSection('home');
+    </script>
+</body>
+</html>
