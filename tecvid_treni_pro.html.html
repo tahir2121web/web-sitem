@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tecvid Treni PRO</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        @font-face {
+            font-family: 'arabic';
+            src: local('Amiri'), local('Arial');
+        }
+        
+        .font-arabic {
+            font-family: 'Traditional Arabic', 'Amiri', 'Arial', serif;
+            direction: rtl;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .animate-in { animation: fadeIn 0.5s ease-out forwards; }
+        .zoom-in { animation: zoomIn 0.3s ease-out forwards; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 md:p-8">
+
+    <div id="app" class="w-full max-w-6xl"></div>
+
+    <script>
+        // --- DATA SETUP ---
+        const vagonlar = [
+            {
+                id: 0,
+                baslik: "Lokomotif: Temel Medler",
+                renk: "bg-red-600",
+                renkLight: "bg-red-50",
+                renkText: "text-red-600",
+                ozet: "Uzatma harfleriyle yapılan temel tecvidler.",
+                detay: [
+                    { alt: "Medd-i Tabiî", icerik: "Harf-i medden sonra sebep gelmezse 1 elif uzatılır.", harfler: ["قَالَ", "قِيلَ", "يَقُولُ", "نُوحِيهَا", "فِيهَا", "مَالِكِ"], kod: "Doğal Uzatma", kuralHarfleri: ["ا", "و", "ي"] },
+                    { alt: "Medd-i Muttasıl", icerik: "Harf-i med + Hemze AYNI kelimede. 4 elif uzatılır.", harfler: ["جَاءَ", "سِيءَ", "السَّمَاءِ", "سُوءُ", "شَاءَ"], kod: "Bitişik Uzatma", kuralHarfleri: ["ا", "و", "ي", "+", "ء"] },
+                    { alt: "Medd-i Munfasıl", icerik: "Harf-i med + Hemze AYRI kelimelerde. 4 elif uzatılır.", harfler: ["يَا أَيُّهَا", "قُولُوا آمَنَّا", "فِي أَنْفُسِكُمْ", "إِنَّا أَنْزَلْنَاهُ"], kod: "Ayrı Uzatma", kuralHarfleri: ["ا", "و", "ي", "+", "ء"] }
+                ]
+            },
+            {
+                id: 1,
+                baslik: "1. Vagon: Güçlü Medler",
+                renk: "bg-orange-600",
+                renkLight: "bg-orange-50",
+                renkText: "text-orange-600",
+                ozet: "Sükun sebebiyle ortaya çıkan uzun okuyuşlar.",
+                detay: [
+                    { alt: "Medd-i Lâzım", icerik: "Harf-i med + Sükun-u Lazım. Kesinlikle 4 elif uzatılır.", harfler: ["الضَّالِّينَ", "آلْآنَ", "الْحَاقَّةُ", "الصَّاخَّةُ"], kod: "Zorunlu Uzatma", kuralHarfleri: ["ا", "و", "ي", "+", "ـّ", "ـْ"] },
+                    { alt: "Medd-i Ârız", icerik: "Durulduğunda ortaya çıkan sükun (Sükun-u Arız) ile yapılır.", harfler: ["الْعَالَمِينَ", "الرَّحِيمِ", "نَسْتَعِينُ", "يُوقِنُونَ"], kod: "Durak Uzatması", kuralHarfleri: ["Durak", "+", "ـْ"] },
+                    { alt: "Medd-i Lîn", icerik: "Lîn harfleri (vav, ye) sakin, son harfte durulursa yapılır.", harfler: ["خَوْفٍ", "الصَّيْفِ", "قُرَيْشٍ", "بَيْتٍ"], kod: "Yumuşak Uzatma", kuralHarfleri: ["و", "ي", "+", "Durak"] }
+                ]
+            },
+            {
+                id: 2,
+                baslik: "2. Vagon: Tenvin & Nun Sakin",
+                renk: "bg-blue-600",
+                renkLight: "bg-blue-50",
+                renkText: "text-blue-600",
+                ozet: "N sesinin diğer harfler karşısındaki halleri.",
+                detay: [
+                    { alt: "İhfa (Gizleme)", icerik: "Sesi genizden 1.5 elif miktarı gizleyerek okumak.", harfler: ["مِنْ قَبْلُ", "اِنْ كُنْتُمْ", "أَنْدَاداً", "مِنْ تَحْتِهَا", "شَيْءٍ قَدِيرٌ"], kod: "15 Harf (f, s, t, z...)", kuralHarfleri: ["ت", "ث", "ج", "د", "ذ", "ز", "س", "ش", "ص", "ض", "ط", "ظ", "ف", "ق", "ك"] },
+                    { alt: "İzhar (Açıklama)", icerik: "Hiç tutmadan, N sesini net bir şekilde okumak.", harfler: ["مِنْ حَيْثُ", "اَنْعَمْتَ", "عَذَابٌ اَلِيمٌ", "كُفُواً اَحَدٌ"], kod: "6 Boğaz Harfi", kuralHarfleri: ["ء", "ه", "ع", "ح", "غ", "خ"] },
+                    { alt: "İklab (Dönüştürme)", icerik: "N sesini M sesine çevirip dudakları hafifçe değdirmek.", harfler: ["مِنْ بَعْدِ", "لَيُنْبَذَنَّ", "سَمِيعٌ بَصِيرٌ", "بِذَنْبِهِمْ"], kod: "Sadece B (ب) Harfi", kuralHarfleri: ["ب"] }
+                ]
+            },
+            {
+                id: 3,
+                baslik: "3. Vagon: İdgam Çeşitleri",
+                renk: "bg-emerald-600",
+                renkLight: "bg-emerald-50",
+                renkText: "text-emerald-600",
+                ozet: "Harflerin birbirine kaynaştırıldığı (şeddeli) duraklar.",
+                detay: [
+                    { alt: "İdgam Maal-Gunne", icerik: "Genizden ses getirerek ve tutarak kaynaştırmak.", harfler: ["مَنْ يَعْمَلْ", "مِنْ مَاءٍ", "لَهَبٍ وَتَبَّ", "وُجُوهٌ يَوْمَئِذٍ"], kod: "Y-M-N-W Harfleri", kuralHarfleri: ["ي", "م", "ن", "و"] },
+                    { alt: "İdgam Bila-Gunne", icerik: "Genizden ses getirmeden (tutmadan) hızlıca kaynaştırmak.", harfler: ["مِنْ رَبِّهِمْ", "غَفُورٌ رَحِيمٌ", "لَدُنْ رَبِّي", "وَيْلٌ لِلْمُطَفِّفِينَ"], kod: "L ve R Harfleri", kuralHarfleri: ["ل", "ر"] },
+                    { alt: "İdgam-ı Misleyn", icerik: "Aynı harfin yan yana gelip şeddeli okunması.", harfler: ["يُدْرِكْكُمُ", "اِذْ ذَهَبَ", "قَدْ دَخَلُوا"], kod: "Aynı Harfler", kuralHarfleri: ["ب+ب", "د+د", "م+م"] }
+                ]
+            },
+            {
+                id: 4,
+                baslik: "4. Vagon: Mim Sakin & Diğer",
+                renk: "bg-purple-600",
+                renkLight: "bg-purple-50",
+                renkText: "text-purple-600",
+                ozet: "Dudak ihfası, kalkale ve sarsıntılı okuyuşlar.",
+                detay: [
+                    { alt: "İhfa-i Şefevi", icerik: "Dudak İhfası. Sakin Mim + Be gelirse dudak hafif değdirilir.", harfler: ["تَرْمِيهِمْ بِحِجَارَةٍ", "اَمْ بِهِ", "يَعْتَصِمْ بِاللَّهِ"], kod: "Mim + Be", kuralHarfleri: ["مْ", "+", "ب"] },
+                    { alt: "Kalkale", icerik: "Vurgulu okuma. Kelime ortasında veya sonunda harfi sarsmak.", harfler: ["اَقْرَاْ", "يَطْمَعُ", "لَمْ يَلِدْ", "فَلَقْ", "مُحِيطٌ"], kod: "Kutbu Cedid", kuralHarfleri: ["ق", "ط", "ب", "ج", "د"] }
+                ]
+            }
+        ];
+
+        // 100 Soru Havuzu Oluşturma
+        const pools = [
+            { r: "Medd-i Tabii", o: ["Medd-i Tabii", "İzhar", "Kalkale"], t: "Harekeden sonra sadece uzatma harfi (ا و ي) var.", w: ["قَالَ", "قِيلَ", "يَقُولُ", "نُوحِيهَا", "فِيهَا", "أُوتِينَا", "مَالِكِ", "الرَّحْمَنِ", "إِيَّاكَ", "صِرَاطَ"] },
+            { r: "İzhar", o: ["İzhar", "İhfa", "İklab"], t: "Sakin Nun'dan sonra Boğaz harflerinden biri gelmiş.", w: ["مِنْ حَيْثُ", "اَنْعَمْتَ", "عَذَابٌ اَلِيمٌ", "مِنْ خَوْفٍ", "كُفُوًا اَحَدٌ", "مَنْ اَظْلَمُ", "يَوْمَئِذٍ خَاشِعَةٌ", "حَاسِدٍ اِذَا", "سَلَامٌ هِيَ", "عَلِيمٌ حَكِيمٌ"] },
+            { r: "Kalkale", o: ["Kalkale", "İhfa", "İzhar"], t: "Kutbu Cedid (ق ط ب ج د) harflerinden biri cezimli gelmiş.", w: ["اَقْرَاْ", "يَطْمَعُ", "لَمْ يَلِدْ", "فَلَقْ", "مُحِيطٌ", "اَحَدٌ", "يَجْعَلُونَ", "اَبْصَارِهِمْ", "قَبْلِكَ", "اَدْرَاكَ"] },
+            { r: "İhfa", o: ["İhfa", "İklab", "İzhar"], t: "N sesi genizden 1.5 elif miktarı tutulup gizleniyor.", w: ["مِنْ قَبْلُ", "اِنْ كُنْتُمْ", "اَنْدَادًا", "مِنْ تَحْتِهَا", "شَيْءٍ قَدِيرٌ", "عَمَلًا صَالِحًا", "كَلِمَةً طَيِّبَةً", "مَنْ ذَا الَّذِي", "يَنْصُرْكُمُ", "اِنْ شَاءَ"] },
+            { r: "İdgam Maal-Gunne", o: ["İdgam Bila-Gunne", "İdgam Maal-Gunne", "İzhar"], t: "YEMNU (ي م ن و) harflerinden biriyle tutarak kaynaşıyor.", w: ["مَنْ يَعْمَلْ", "مِنْ مَاءٍ", "لَهَبٍ وَتَبَّ", "وُجُوهٌ يَوْمَئِذٍ", "خَيْرًا يَرَهُ", "شَرًّا يَرَهُ", "مِنْ وَالٍ", "مِنْ نِعْمَةٍ", "صِرَاطًا مُسْتَقِيمًا", "غِشَاوَةٌ وَلَهُمْ"] },
+            { r: "İdgam Bila-Gunne", o: ["İdgam Maal-Gunne", "İdgam Bila-Gunne", "İhfa"], t: "Lâm (ل) veya Râ (ر) harfine tutmadan (gunnesiz) kaynaşıyor.", w: ["مِنْ رَبِّهِمْ", "غَفُورٌ رَحِيمٌ", "لَدُنْ رَبِّي", "وَيْلٌ لِلْمُطَفِّفِينَ", "رَؤُفٌ رَحِيمٌ", "مُحَمَّدٌ رَسُولُ", "هُدًى لِلْمُتَّقِينَ", "مِنْ لَدُنْكَ", "خَيْرٌ لَكَ", "فَوَيْلٌ لِلَّذِينَ"] },
+            { r: "İklab", o: ["İklab", "İhfa", "İzhar"], t: "Be (ب) harfi N sesini nazikçe M sesine dönüştürüyor.", w: ["مِنْ بَعْدِ", "لَيُنْبَذَنَّ", "سَمِيعٌ بَصِيرٌ", "اَنْبِئْهُمْ", "بِذَنْبِهِمْ", "يُنْبِتُ", "مِنْ بَيْنِ", "خَبِيرٌ بَصِيرٌ", "مُحِيطٌ بِالْكَافِرِينَ", "كِرَامٍ بَرَرَةٍ"] },
+            { r: "Medd-i Muttasıl", o: ["Medd-i Muttasıl", "Medd-i Munfasıl", "Medd-i Lazım"], t: "Harf-i Med ve Hemze AYNI kelime içinde bitişik.", w: ["جَاءَ", "سِيءَ", "السَّمَاءِ", "سُوءُ", "شَاءَ", "هَنِيئًا", "مَرِيئًا", "الْمَلَائِكَةُ", "قُرُوءٍ", "يَشَاءُ"] },
+            { r: "Medd-i Munfasıl", o: ["Medd-i Munfasıl", "Medd-i Muttasıl", "Medd-i Lazım"], t: "Harf-i Med ve Hemze AYRI iki kelimenin arasında.", w: ["يَا أَيُّهَا", "قُولُوا آمَنَّا", "فِي أَنْفُسِكُمْ", "إِنَّا أَنْزَلْنَاهُ", "وَمَا أَدْرَاكَ", "إِنِّي أَعْلَمُ", "لَا أَعْبُدُ", "مَا أَنْتُمْ", "بِمَا أُنْزِلَ", "قُوا أَنْفُسَكُمْ"] },
+            { r: "Medd-i Lazım", o: ["Medd-i Lazım", "Medd-i Arız", "İhfa-i Şefevi"], t: "Harf-i medden sonra şeddeli veya cezimli harf (Sükun-u Lazım) gelmiş.", w: ["الضَّالِّينَ", "آلْآنَ", "الْحَاقَّةُ", "الصَّاخَّةُ", "أَتُحَاجُّونِّي", "تَرْمِيهِمْ بِحِجَارَةٍ", "اَمْ بِهِ", "الْعَالَمِينَ", "نَسْتَعِينُ", "يُوقِنُونَ"] }
+        ];
+
+        let practiceData = [];
+        pools.forEach(pool => {
+            pool.w.forEach(word => {
+                practiceData.push({ word, rule: pool.r, options: pool.o, tip: pool.t });
+            });
+        });
+
+        // --- STATE ---
+        let state = {
+            view: 'train',
+            activeVagon: 0,
+            practiceStep: 0,
+            score: 0,
+            showResult: null, // 'correct' | 'wrong' | null
+            playingWord: null,
+            voicesLoaded: false,
+            voiceName: null
+        };
+
+        // --- STREAMING_CHUNK:Defining speech synthesis and helper functions... ---
+        
+        // ===== SES MOTORU =====
+        // Harf adları (tek harf okunurken harfin ADI söylenir: ب -> "bâ")
+        const HARF_ADLARI = {
+            "ا":"أَلِف","ب":"بَاء","ت":"تَاء","ث":"ثَاء","ج":"جِيم","ح":"حَاء","خ":"خَاء",
+            "د":"دَال","ذ":"ذَال","ر":"رَاء","ز":"زَاي","س":"سِين","ش":"شِين","ص":"صَاد",
+            "ض":"ضَاد","ط":"طَاء","ظ":"ظَاء","ع":"عَيْن","غ":"غَيْن","ف":"فَاء","ق":"قَاف",
+            "ك":"كَاف","ل":"لَام","م":"مِيم","ن":"نُون","ه":"هَاء","و":"وَاو","ي":"يَاء","ء":"هَمْزَة"
+        };
+
+        let ttsVoice = null;       // seçilen cihaz sesi
+        let onlineAudio = null;    // yedek (internet) ses
+        let useOnlineFirst = false;
+
+        function scoreVoice(v) {
+            const lang = (v.lang || '').replace('_', '-').toLowerCase();
+            if (!lang.startsWith('ar')) return -1;
+            const n = v.name.toLowerCase();
+            let sc = 10;
+            if (lang === 'ar-sa') sc += 5;
+            if (/natural|neural|online/.test(n)) sc += 30;                       // en kaliteli sesler
+            if (/naayf|hamed|majed|maged|tarik|laila|zariyah|google/.test(n)) sc += 15;
+            if (v.localService === false) sc += 3;
+            return sc;
+        }
+
+        function pickVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            let best = null, bestScore = -1;
+            voices.forEach(v => { const sc = scoreVoice(v); if (sc > bestScore) { best = v; bestScore = sc; } });
+            ttsVoice = best;
+            state.voicesLoaded = true;
+            state.voiceName = best ? best.name : null;
+        }
+
+        if ('speechSynthesis' in window) {
+            const loadVoices = () => {
+                if (window.speechSynthesis.getVoices().length > 0) {
+                    pickVoice();
+                    render();
+                }
+            };
+            loadVoices();
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            // Bazı tarayıcılar sesleri geç yükler
+            setTimeout(() => { if (!state.voicesLoaded) { pickVoice(); render(); } }, 1500);
+        } else {
+            state.voicesLoaded = true;
+        }
+
+        // Metni sese hazırlama: gereksiz işaretleri temizle, harakeleri düzgün sıraya diz
+        function hazirlaMetin(word) {
+            let t = String(word).trim();
+            // Tek harf ise harfin adını oku
+            if (t.length === 1 && HARF_ADLARI[t]) return HARF_ADLARI[t];
+            t = t.normalize('NFC')
+                 .replace(/\u0640/g, '')                       // tatweel
+                 .replace(/ٱ/g, 'ا')                           // vasl elifi
+                 .replace(/\u0670/g, 'ا')                      // hançer fetha
+                 .replace(/([\u064B-\u0650\u0652])\u0651/g, '\u0651$1') // şedde önce, sonra harake
+                 .replace(/\u06A9/g, 'ك').replace(/\u06CC/g, 'ي');
+            return t;
+        }
+
+        function bitir() { state.playingWord = null; render(); }
+
+        // Yedek: internet üzerinden Arapça ses (cihazda Arapça ses yoksa)
+        function playOnline(word, text) {
+            try { if (onlineAudio) { onlineAudio.pause(); onlineAudio = null; } } catch(e) {}
+            // Çok kelimeli ifadelerde daha net okuması için harekeli metni olduğu gibi gönderiyoruz
+            const url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ar&ttsspeed=0.6&q=' + encodeURIComponent(text);
+            const a = new Audio(url);
+            onlineAudio = a;
+            a.onplay = () => { state.playingWord = word; render(); };
+            a.onended = bitir;
+            a.onerror = () => {
+                bitir();
+                alert("Arapça ses bulunamadı. Cihazınızın ayarlarından Arapça ses paketi ekleyin ya da internete bağlanın.");
+            };
+            a.play().catch(() => bitir());
+        }
+
+        function playAudio(word) {
+            const text = hazirlaMetin(word);
+            try { if (onlineAudio) { onlineAudio.pause(); onlineAudio = null; } } catch(e) {}
+
+            const hasSynth = 'speechSynthesis' in window;
+            if (hasSynth) window.speechSynthesis.cancel();
+
+            // Cihazda Arapça ses yoksa doğrudan internet sesini kullan
+            if (!hasSynth || !ttsVoice) { playOnline(word, text); return; }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = ttsVoice;
+            utterance.lang = ttsVoice.lang || 'ar-SA';
+            utterance.rate = 0.8;     // eskiden 0.55 idi: çok yavaş olunca heceler bozuluyordu
+            utterance.pitch = 1;      // eskiden 0.6 idi: ses boğuklaşıp harfler karışıyordu
+            utterance.volume = 1;
+
+            let basladi = false;
+            utterance.onstart = () => { basladi = true; state.playingWord = word; render(); };
+            utterance.onend = bitir;
+            utterance.onerror = (e) => {
+                console.error("Ses hatası:", e);
+                if (!basladi && e.error !== 'canceled' && e.error !== 'interrupted') playOnline(word, text);
+                else if (e.error !== 'canceled' && e.error !== 'interrupted') bitir();
+            };
+
+            // Chrome'da cancel() sonrası hemen speak() bazen takılıyor
+            setTimeout(() => window.speechSynthesis.speak(utterance), 60);
+        }
+
+        function testSesi() {
+            playAudio("بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم");
+        }
+
+        // Action Handlers
+        function setView(newView) {
+            state.view = newView;
+            if (newView === 'practice') {
+                state.practiceStep = 0;
+                state.score = 0;
+                state.showResult = null;
+            }
+            render();
+        }
+
+        function setActiveVagon(index) {
+            state.activeVagon = index;
+            render();
+        }
+
+        function sonrakiVagon() {
+            state.activeVagon = (state.activeVagon + 1) % vagonlar.length;
+            render();
+        }
+
+        function oncekiVagon() {
+            state.activeVagon = (state.activeVagon - 1 + vagonlar.length) % vagonlar.length;
+            render();
+        }
+
+        function handleAnswer(option) {
+            if(state.showResult !== null) return; // Prevent multiple clicks
+            
+            const correctRule = practiceData[state.practiceStep].rule;
+            if (option === correctRule) {
+                state.score += 10;
+                state.showResult = 'correct';
+            } else {
+                state.showResult = 'wrong';
+            }
+            render();
+
+            setTimeout(() => {
+                state.showResult = null;
+                if (state.practiceStep < practiceData.length - 1) {
+                    state.practiceStep++;
+                } else {
+                    state.view = 'quiz-result';
+                }
+                render();
+            }, 1500);
+        }
+
+        function restartPractice() {
+            state.practiceStep = 0;
+            state.score = 0;
+            state.view = 'practice';
+            render();
+        }
+
+        // --- STREAMING_CHUNK:Rendering View Templates... ---
+
+        function renderHeader() {
+            const isTestPlaying = state.playingWord === "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم";
+            
+            return `
+            <div class="w-full flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-red-600 rounded-2xl shadow-lg -rotate-6">
+                        <i class="fa-solid fa-train-subway text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-black text-slate-800 tracking-tight">TECVİD TRENİ <span class="text-red-600">PRO</span></h1>
+                        <p class="text-slate-500 text-sm font-medium">100 Soruluk İHL 9. Sınıf Müfredat Uyumluluğu</p>
+                    </div>
+                </div>
+
+                <nav class="flex items-center gap-4">
+                    <button onclick="testSesi()" class="px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${isTestPlaying ? 'bg-red-100 text-red-600 ring-2 ring-red-500' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}" title="Tarayıcı ses motorunu test et">
+                        ${isTestPlaying ? '<i class="fa-solid fa-wave-square fa-beat"></i>' : '<i class="fa-solid fa-volume-high"></i>'}
+                        <span class="hidden sm:inline">Ses Testi</span>
+                    </button>
+
+                    <div class="flex bg-white p-1 rounded-2xl shadow-sm border border-slate-200">
+                        <button onclick="setView('train')" class="px-6 py-3 rounded-xl text-sm font-bold transition-all ${state.view === 'train' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'}">
+                            Eğitim İstasyonu
+                        </button>
+                        <button onclick="setView('practice')" class="px-6 py-3 rounded-xl text-sm font-bold transition-all ${state.view === 'practice' || state.view === 'quiz-result' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'}">
+                            Tam Kapsamlı Uygulama
+                        </button>
+                    </div>
+                </nav>
+            </div>
+            `;
+        }
+
+        function renderTrainView() {
+            const vagon = vagonlar[state.activeVagon];
+
+            let wagonsHTML = vagonlar.map((v, i) => {
+                let isActive = state.activeVagon === i;
+                return `
+                <div onclick="setActiveVagon(${i})" class="relative flex-1 max-w-[14rem] cursor-pointer transition-all duration-500 mx-1 md:mx-2 ${isActive ? 'scale-110 -translate-y-4 md:-translate-y-6 z-10' : 'scale-90 opacity-60 hover:opacity-80'}">
+                    <div class="w-full h-24 sm:h-28 md:h-36 rounded-t-xl md:rounded-t-3xl shadow-xl flex flex-col items-center justify-center p-1 md:p-4 text-white ${v.renk}">
+                        <span class="text-[8px] md:text-[10px] font-bold opacity-80 uppercase tracking-widest mb-0.5 md:mb-1">Vagon ${i}</span>
+                        <div class="bg-white/20 p-1 md:p-2 rounded-full mb-1 md:mb-2 hidden sm:block">
+                            <i class="fa-solid ${i === 0 ? 'fa-train' : 'fa-book-open'} text-sm md:text-lg"></i>
+                        </div>
+                        <h3 class="text-center font-bold text-[9px] sm:text-xs md:text-sm leading-tight line-clamp-2 md:line-clamp-none">${v.baslik.split(':')[1]}</h3>
+                    </div>
+                    <div class="w-full h-2 md:h-4 bg-slate-900 flex justify-around items-end">
+                        <div class="w-5 h-5 md:w-8 md:h-8 bg-slate-800 rounded-full border-[3px] md:border-4 border-slate-600 -mb-2.5 md:-mb-4 shadow-lg"></div>
+                        <div class="w-5 h-5 md:w-8 md:h-8 bg-slate-800 rounded-full border-[3px] md:border-4 border-slate-600 -mb-2.5 md:-mb-4 shadow-lg"></div>
+                    </div>
+                    ${i < vagonlar.length - 1 ? `<div class="absolute top-[60%] -right-2 md:-right-4 w-4 md:w-8 h-1 md:h-2 bg-slate-400 z-0"></div>` : ''}
+                </div>`;
+            }).join('');
+
+            let detaylarHTML = vagon.detay.map((det) => {
+                let harflerHTML = det.harfler.map(h => {
+                    let isPlaying = state.playingWord === h;
+                    return `
+                    <button onclick="playAudio('${h}')" class="w-auto px-4 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm border border-slate-100 text-xl font-arabic cursor-pointer transition-all ${isPlaying ? 'ring-2 ring-red-500 text-red-600 scale-105' : 'text-slate-800 hover:text-red-600 hover:-translate-y-1'}" title="Tıkla ve Dinle">
+                        ${h}
+                        ${isPlaying ? '<i class="fa-solid fa-wave-square fa-beat ml-2 text-red-500 text-sm"></i>' : ''}
+                    </button>`;
+                }).join('');
+
+                let kuralHarfleriHTML = det.kuralHarfleri.map(kh => {
+                    let isSymbol = kh === '+' || kh === 'Durak';
+                    if (isSymbol) {
+                        return `<div class="h-8 px-2 min-w-[2rem] flex items-center justify-center text-slate-400 text-sm font-sans rounded-lg">${kh}</div>`;
+                    }
+                    return `
+                    <button onclick="playAudio('${kh}')" title="Harfin adını dinle" class="h-8 px-2 min-w-[2rem] flex items-center justify-center font-arabic text-lg rounded-lg bg-blue-100 text-blue-700 border border-blue-200 shadow-sm cursor-pointer hover:bg-blue-200 transition-colors ${state.playingWord === kh ? 'ring-2 ring-red-500' : ''}">
+                        ${kh}
+                    </button>`;
+                }).join('');
+
+                return `
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-blue-200 transition-colors group">
+                    <div class="flex justify-between mb-3">
+                        <h4 class="font-bold text-blue-600">${det.alt}</h4>
+                        <span class="text-[10px] bg-white px-2 py-1 rounded-md shadow-sm font-bold text-slate-400 uppercase tracking-tighter">${det.kod}</span>
+                    </div>
+                    <p class="text-slate-600 text-sm mb-4 leading-relaxed">${det.icerik}</p>
+                    
+                    <div class="mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                        <span>Örnek Kelimeler:</span>
+                        <span class="text-red-500 flex items-center gap-1"><i class="fa-solid fa-volume-high text-xs"></i> Dinle</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        ${harflerHTML}
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kural Harfleri:</div>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${kuralHarfleriHTML}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            return `
+            <div class="animate-in w-full">
+                <div class="relative flex items-end justify-center w-full pb-8 md:pb-12 px-1 sm:px-4 md:px-10">
+                    ${wagonsHTML}
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-100 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-40 h-40 opacity-5 rounded-bl-full ${vagon.renk}"></div>
+                            
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
+                                <div class="flex items-center gap-4">
+                                    <div class="p-4 rounded-2xl text-white ${vagon.renk}">
+                                        <i class="fa-solid fa-graduation-cap text-3xl"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-black text-slate-800 uppercase">${vagon.baslik}</h2>
+                                        <p class="text-slate-500 font-medium">${vagon.ozet}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex gap-2 self-start md:self-auto">
+                                    <button onclick="oncekiVagon()" class="p-3 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all text-slate-600 flex items-center justify-center shadow-sm" title="Önceki Vagon">
+                                        <i class="fa-solid fa-chevron-left"></i>
+                                    </button>
+                                    <button onclick="sonrakiVagon()" class="p-3 bg-slate-800 rounded-xl hover:bg-slate-700 transition-all text-white flex items-center justify-center shadow-sm" title="Sonraki Vagon">
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                                ${detaylarHTML}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-red-50 rounded-3xl p-6 border border-red-100 shadow-sm relative overflow-hidden group">
+                            <i class="fa-solid fa-volume-high absolute top-4 right-4 text-red-200 opacity-50 group-hover:scale-125 transition-transform text-6xl"></i>
+                            <h4 class="font-bold text-red-800 mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-gear ${state.voicesLoaded ? 'text-green-600' : 'text-red-500 fa-spin'}"></i>
+                                Ses Durumu: ${state.voicesLoaded ? (state.voiceName ? 'Aktif' : 'Internet sesi') : 'Hazırlanıyor'}
+                            </h4>
+                            <p class="text-red-600 text-sm leading-relaxed mb-4 font-medium">
+                                Kelimelere tıkladığınızda cihazınızdaki en kaliteli Arapça ses ile, net ve anlaşılır hızda seslendirilir. Mavi harflere tıklarsanız harfin adı okunur.${state.voiceName ? ' <span class=\"block mt-1 text-xs opacity-70\">Kullanılan ses: ' + state.voiceName + '</span>' : ''}
+                            </p>
+                            ${state.playingWord && state.playingWord !== "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم" ? `
+                            <div class="flex items-center justify-center gap-3 bg-white p-3 rounded-xl shadow-sm text-red-600 font-bold animate-pulse">
+                                <i class="fa-solid fa-wave-square"></i> Seslendiriliyor...
+                            </div>` : ''}
+                        </div>
+
+                        <div class="bg-slate-800 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-lightbulb text-yellow-400"></i> Analiz Notu
+                            </h3>
+                            <div class="space-y-4 text-slate-300 text-sm leading-relaxed">
+                                <p>Müfredatta yer alan <b>Medd-i Lîn</b> ve <b>Medd-i Ârız</b> durulduğunda uzatılır, geçildiğinde uzatılmaz.</p>
+                                <p>Kuralların harflerini ezberlemek yerine <b>sesin genizden gelişi</b> veya <b>kaynaşması</b> gibi pratik seslere odaklanın.</p>
+                            </div>
+                            <button onclick="setView('practice')" class="mt-6 w-full py-3 bg-white text-slate-800 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-50 transition-colors">
+                                <i class="fa-solid fa-circle-play text-lg"></i> 100 Soruluk Teste Başla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // --- STREAMING_CHUNK:Rendering Practice/Quiz Section... ---
+        function renderPracticeView() {
+            const data = practiceData[state.practiceStep];
+            const progress = ((state.practiceStep + 1) / practiceData.length) * 100;
+            const levelClass = state.practiceStep < 30 ? 'bg-green-100 text-green-700' : state.practiceStep < 70 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700';
+            const levelText = state.practiceStep < 30 ? 'Kolay' : state.practiceStep < 70 ? 'Orta' : 'Zor';
+            const progressBg = state.practiceStep < 30 ? 'bg-green-500' : state.practiceStep < 70 ? 'bg-yellow-500' : 'bg-red-600';
+
+            let optionsHTML = data.options.map(opt => {
+                let btnClass = 'bg-white border-slate-100 text-slate-700 hover:border-blue-600 hover:shadow-md';
+                if (state.showResult === 'correct' && opt === data.rule) {
+                    btnClass = 'bg-green-500 border-green-500 text-white scale-105';
+                } else if (state.showResult === 'wrong' && opt !== data.rule) {
+                    btnClass = 'bg-white border-slate-200 text-slate-400 opacity-50';
+                }
+                return `
+                <button ${state.showResult !== null ? 'disabled' : ''} onclick="handleAnswer('${opt}')" class="py-5 px-6 rounded-2xl font-bold text-lg transition-all shadow-sm border-2 ${btnClass}">
+                    ${opt}
+                </button>`;
+            }).join('');
+
+            let overlayHTML = '';
+            if (state.showResult === 'correct') {
+                overlayHTML = `
+                <div class="absolute inset-0 bg-white/95 flex flex-col items-center justify-center z-20 zoom-in">
+                    <i class="fa-solid fa-circle-check text-8xl text-green-500 mb-6 drop-shadow-md"></i>
+                    <h3 class="text-4xl font-black text-green-600 mb-2">DOĞRU!</h3>
+                    <p class="text-slate-500 font-bold text-lg">+10 PUAN</p>
+                </div>`;
+            } else if (state.showResult === 'wrong') {
+                overlayHTML = `
+                <div class="absolute inset-0 bg-white/95 flex flex-col items-center justify-center z-20 zoom-in">
+                    <i class="fa-solid fa-circle-xmark text-8xl text-red-500 mb-6 drop-shadow-md"></i>
+                    <h3 class="text-4xl font-black text-red-600 mb-2">YAKLAŞTIN...</h3>
+                    <p class="text-slate-600 font-medium text-lg">Doğru Cevap: <span class="font-bold text-slate-800">${data.rule}</span></p>
+                </div>`;
+            }
+
+            return `
+            <div class="w-full flex justify-center animate-in zoom-in">
+                <div class="w-full max-w-3xl bg-white rounded-[40px] shadow-2xl p-6 md:p-12 border border-slate-100 text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-slate-100 rounded-t-[40px] overflow-hidden">
+                        <div class="h-full transition-all duration-500 ${progressBg}" style="width: ${progress}%"></div>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-8 mt-2">
+                        <div>
+                            <span class="text-slate-400 font-bold text-xs uppercase tracking-widest block mb-1">Seviye</span>
+                            <span class="font-black text-sm uppercase px-3 py-1 rounded-full ${levelClass}">${levelText}</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="text-slate-400 font-bold text-xs uppercase tracking-widest block mb-1">Soru</span>
+                            <span class="text-2xl font-black text-slate-800">${state.practiceStep + 1}<span class="text-slate-400 text-lg">/100</span></span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-400 font-bold text-xs uppercase tracking-widest block mb-1">Puan</span>
+                            <span class="text-2xl font-black text-blue-600">${state.score}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-10">
+                        <div class="text-6xl md:text-8xl font-arabic text-slate-800 py-12 bg-slate-50 rounded-3xl shadow-inner border border-slate-100 mb-6 relative">
+                            ${data.word}
+                            <button onclick="playAudio('${data.word}')" class="absolute bottom-4 right-4 p-4 bg-white rounded-full shadow-lg border border-slate-200 text-red-600 hover:scale-110 hover:bg-red-50 transition-all cursor-pointer" title="Sesli okunuşu dinle">
+                                <i class="fa-solid ${state.playingWord === data.word ? 'fa-wave-square fa-beat' : 'fa-volume-high'} text-xl"></i>
+                            </button>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-2xl text-blue-800 text-sm flex items-center justify-center gap-2 font-medium">
+                            <i class="fa-solid fa-circle-info"></i> İpucu: ${data.tip}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        ${optionsHTML}
+                    </div>
+
+                    ${overlayHTML}
+                </div>
+            </div>`;
+        }
+
+        // --- STREAMING_CHUNK:Rendering Results and Footer... ---
+        function renderResultView() {
+            return `
+            <div class="w-full flex justify-center animate-in zoom-in">
+                <div class="w-full max-w-2xl bg-white rounded-[40px] shadow-2xl p-12 border border-slate-100 text-center">
+                    <i class="fa-solid fa-trophy text-8xl text-yellow-400 mb-6 drop-shadow-lg"></i>
+                    <h2 class="text-5xl font-black text-slate-800 mb-4">Müthiş Başarı!</h2>
+                    <p class="text-slate-500 mb-10 font-medium text-lg">100 soruluk zorlu tecvid maratonunu tamamladın.</p>
+                    
+                    <div class="bg-slate-50 py-8 px-6 rounded-3xl mb-10 border-2 border-slate-100">
+                        <span class="text-sm font-bold text-slate-400 uppercase tracking-widest block mb-2">Nihai Skorun</span>
+                        <span class="text-7xl font-black text-red-600">${state.score}</span>
+                        <span class="text-2xl text-slate-400 font-bold"> / 1000</span>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button onclick="restartPractice()" class="flex-1 py-4 bg-slate-800 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-700 transition-all text-lg">
+                            <i class="fa-solid fa-arrow-rotate-right"></i> Tekrar Çöz
+                        </button>
+                        <button onclick="setView('train')" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-200 transition-all text-lg">
+                            <i class="fa-solid fa-train"></i> İstasyonlara Dön
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function renderFooter() {
+            return `
+            <footer class="mt-auto pt-10 pb-4 text-slate-400 text-sm flex items-center justify-center gap-3 font-medium flex-wrap">
+                <span>Görselleştirilmiş Kur'an Eğitimi</span>
+                <div class="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                <span>İHL 9. Sınıf Müfredat Uyumluluğu</span>
+                <div class="w-1.5 h-1.5 bg-slate-300 rounded-full hidden md:block"></div>
+                <span class="text-red-500 flex items-center gap-1"><i class="fa-solid fa-volume-high text-xs"></i> Sesli Okuma Aktif</span>
+            </footer>`;
+        }
+
+        // --- STREAMING_CHUNK:Main Application Bootstrap... ---
+        function render() {
+            const appDiv = document.getElementById('app');
+            let content = renderHeader();
+
+            if (state.view === 'train') {
+                content += renderTrainView();
+            } else if (state.view === 'practice') {
+                content += renderPracticeView();
+            } else if (state.view === 'quiz-result') {
+                content += renderResultView();
+            }
+
+            content += renderFooter();
+            appDiv.innerHTML = content;
+        }
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', render);
+    </script>
+</body>
+</html>
