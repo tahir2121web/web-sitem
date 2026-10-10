@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kur'an Kelime Avı</title>
+    
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons (CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Merriweather', serif;
+        }
+        /* Lucide icon fix for fill colors like Star */
+        .fill-current {
+            fill: currentColor;
+        }
+    </style>
+</head>
+<body class="bg-[#fcf9f2] text-[#5d4037] min-h-screen">
+    <div id="app"></div>
+
+    <script>
+        const QURAN_WORDS = {
+            "Başlangıç (Çok Sık)": [
+                { id: 1, ar: "قَالَ", tr: "Dedi", options: ["Gitti", "Dedi", "Bildi", "Yaptı"], type: "Fiil (Mazi)", freq: "1713 kez" },
+                { id: 2, ar: "رَبّ", tr: "Rab / Efendi", options: ["Kul", "İlah", "Rab / Efendi", "Peygamber"], type: "İsim", freq: "970 kez" },
+                { id: 3, ar: "آمَنُوا", tr: "İman ettiler", options: ["Kafir oldular", "İman ettiler", "Sustular", "Gördüler"], type: "Fiil", freq: "800+ kez" },
+                { id: 4, ar: "أَرْض", tr: "Yer / Yeryüzü", options: ["Gök", "Yer / Yeryüzü", "Deniz", "Dağ"], type: "İsim", freq: "461 kez" },
+                { id: 5, ar: "عَلِيم", tr: "Hakkıyla bilen", options: ["Güçlü olan", "Hakkıyla bilen", "Gören", "Affeden"], type: "Sıfat", freq: "158 kez" }
+            ],
+            "Orta Seviye": [
+                { id: 1, ar: "يَعْمَلُونَ", tr: "Yapıyorlar", options: ["Yiyorlar", "Gidiyorlar", "Yapıyorlar", "Dönüyorlar"], type: "Fiil (Muzari)", freq: "300+ kez" },
+                { id: 2, ar: "سَبِيل", tr: "Yol", options: ["Yol", "Işık", "Kapı", "Su"], type: "İsim", freq: "176 kez" },
+                { id: 3, ar: "خَلَقَ", tr: "Yarattı", options: ["Yarattı", "Öldürdü", "Diriltti", "Rızıklandırdı"], type: "Fiil", freq: "248 kez" },
+                { id: 4, ar: "مُتَّقِين", tr: "Sakınanlar / Takva sahipleri", options: ["Zalimler", "Münafıklar", "Sakınanlar / Takva sahipleri", "Fasıklar"], type: "İsim", freq: "Çok Sık" }
+            ],
+            "İleri Seviye (Kavramlar)": [
+                { id: 1, ar: "يَتَذَكَّرُونَ", tr: "Öğüt alırlar / Düşünürler", options: ["Unuturlar", "Tartışırlar", "Öğüt alırlar / Düşünürler", "Yalanlarlar"], type: "Fiil", freq: "Kavram" },
+                { id: 2, ar: "فَوْز", tr: "Kurtuluş / Başarı", options: ["Azap", "Zarar", "Kurtuluş / Başarı", "Hüzün"], type: "İsim", freq: "Kavram" },
+                { id: 3, ar: "يَسْتَهْزِؤُونَ", tr: "Alay ediyorlar", options: ["İnanıyorlar", "Alay ediyorlar", "Korkuyorlar", "Kaçıyorlar"], type: "Fiil", freq: "Kavram" }
+            ]
+        };
+
+        let gameState = 'start'; // 'start', 'quiz', 'result'
+        let currentWordIndex = 0;
+        let score = 0;
+        let selectedOption = null;
+        let isAnswered = false;
+        let wrongAnswers = [];
+        let selectedLevel = 'Başlangıç (Çok Sık)';
+        let wordList = [];
+        let aiInsights = {};
+        let loadingInsightFor = null;
+        let audioLoadingFor = null;
+
+        const apiKey = ""; // API Key ortam tarafından sağlanır
+
+        const fetchWithRetry = async (url, options, retries = 5) => {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return await response.json();
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    await new Promise(res => setTimeout(res, delays[i]));
+                }
+            }
+        };
+
+        const createWavUrl = (pcmData, sampleRate = 24000) => {
+            const pcmBuffer = Uint8Array.from(atob(pcmData), c => c.charCodeAt(0)).buffer;
+            const wavBuffer = new ArrayBuffer(44 + pcmBuffer.byteLength);
+            const view = new DataView(wavBuffer);
+            const writeString = (v, o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+            
+            writeString(view, 0, 'RIFF'); 
+            view.setUint32(4, 36 + pcmBuffer.byteLength, true); 
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt '); 
+            view.setUint32(16, 16, true); 
+            view.setUint16(20, 1, true); 
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true); 
+            view.setUint32(28, sampleRate * 2, true); 
+            view.setUint16(32, 2, true); 
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data'); 
+            view.setUint32(40, pcmBuffer.byteLength, true);
+            new Uint8Array(wavBuffer, 44).set(new Uint8Array(pcmBuffer));
+            
+            return URL.createObjectURL(new Blob([view], { type: 'audio/wav' }));
+        };
+
+        window.setSelectedLevel = (level) => {
+            selectedLevel = level;
+            render();
+        };
+
+        window.startGame = () => {
+            wordList = QURAN_WORDS[selectedLevel];
+            gameState = 'quiz';
+            currentWordIndex = 0;
+            score = 0;
+            wrongAnswers = [];
+            selectedOption = null;
+            isAnswered = false;
+            aiInsights = {};
+            render();
+        };
+
+        window.playAudio = async (text) => {
+            if (audioLoadingFor) return;
+            audioLoadingFor = text;
+            render();
+
+            try {
+                const payload = {
+                    contents: [{ parts: [{ text: `Say clearly in a recitation style (Tajweed): ${text}` }] }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
+                    },
+                    model: "gemini-2.5-flash-preview-tts"
+                };
+                const result = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload) 
+                });
+                const pcmData = result.candidates[0].content.parts[0].inlineData.data;
+                const audio = new Audio(createWavUrl(pcmData));
+                audio.play();
+            } catch (error) {
+                console.error("Audio generation failed:", error);
+            } finally { 
+                audioLoadingFor = null; 
+                render();
+            }
+        };
+
+        window.generateVerseInsight = async (wordIndex) => {
+            const word = wordList[wordIndex];
+            loadingInsightFor = word.ar;
+            render();
+
+            try {
+                const prompt = `Kur'an-ı Kerim'deki "${word.ar}" kelimesi hakkında bilgi ver. Bu kelimenin geçtiği bir ayeti (Arapça harekelendirilmiş ve Türkçe mealiyle) örnek göster. Ayrıca kelimenin Kur'an'daki anlam derinliği hakkında 1 cümlelik bilgi ekle.`;
+                const result = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                aiInsights[word.ar] = result.candidates[0].content.parts[0].text;
+            } catch (error) {
+                console.error("Insight generation failed:", error);
+                aiInsights[word.ar] = "Bilgi getirilirken bir hata oluştu. Lütfen tekrar deneyin.";
+            } finally { 
+                loadingInsightFor = null;
+                render();
+            }
+        };
+
+        window.handleOptionClick = (optionIndex) => {
+            if (isAnswered) return;
+            const currentWord = wordList[currentWordIndex];
+            const option = currentWord.options[optionIndex];
+            
+            selectedOption = option;
+            isAnswered = true;
+            
+            if (option === currentWord.tr) {
+                score++;
+            } else {
+                wrongAnswers.push({ ...currentWord, selected: option });
+            }
+            render();
+        };
+
+        window.nextAction = () => {
+            if (currentWordIndex < wordList.length - 1) {
+                currentWordIndex++;
+                isAnswered = false;
+                selectedOption = null;
+            } else {
+                gameState = 'result';
+            }
+            render();
+        };
+
+        window.resetGame = () => {
+            gameState = 'start';
+            render();
+        }
+
+        function renderStartView() {
+            const levelButtons = Object.keys(QURAN_WORDS).map(lvl => {
+                const isSelected = selectedLevel === lvl;
+                const baseClasses = "px-6 py-3 rounded-full font-bold transition-all border-2";
+                const activeClasses = isSelected 
+                    ? "bg-[#8b7355] text-white border-[#8b7355]" 
+                    : "bg-white text-[#8b7355] border-[#e5d5b3] hover:bg-[#fcf9f2]";
+                return `<button onclick="setSelectedLevel('${lvl}')" class="${baseClasses} ${activeClasses}">${lvl}</button>`;
+            }).join('');
+
+            return `
+                <div class="flex flex-col items-center justify-center p-6 h-screen w-full">
+                    <div class="max-w-4xl w-full bg-white rounded-[2rem] shadow-xl p-8 lg:p-12 border-2 border-[#e5d5b3]">
+                        <div class="text-center space-y-6">
+                            <div class="w-24 h-24 bg-[#8b7355] text-white rounded-full flex items-center justify-center mx-auto shadow-inner border-4 border-[#c9b191]">
+                                <i data-lucide="book-open" class="w-10 h-10"></i>
+                            </div>
+                            <h1 class="text-4xl font-bold text-[#5d4037]">Kur'an Kelime Avı</h1>
+                            <p class="text-lg text-[#8d6e63] max-w-2xl mx-auto italic">
+                                "Biz Kur'an'ı, anlaşılsın diye kolaylaştırdık." Kur'an'da en çok geçen kelimeleri öğrenerek meal anlama kabiliyetinizi geliştirin.
+                            </p>
+                            
+                            <div class="flex flex-wrap justify-center gap-3 py-6">
+                                ${levelButtons}
+                            </div>
+
+                            <button onclick="startGame()" class="group relative px-12 py-5 bg-[#5d4037] text-white font-bold rounded-2xl hover:bg-[#4e342e] transition-all shadow-lg overflow-hidden inline-flex items-center gap-2">
+                                <span class="relative z-10 flex items-center gap-2">Hemen Başla <i data-lucide="arrow-right" class="w-5 h-5"></i></span>
+                                <div class="absolute inset-0 bg-white/10 transform translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="mt-8 text-[#8b7355]/60 text-sm">Kur'an-ı Kerim Eğitim Portalı - v2.0</p>
+                </div>
+            `;
+        }
+
+        function renderQuizView() {
+            const currentWord = wordList[currentWordIndex];
+            const progressPct = ((currentWordIndex) / wordList.length) * 100;
+
+            const optionsHtml = currentWord.options.map((opt, i) => {
+                let style = "bg-white border-2 border-[#e5d5b3] text-[#5d4037] hover:border-[#8b7355] hover:bg-[#fcf9f2] cursor-pointer";
+                if (isAnswered) {
+                    style += " cursor-default";
+                    if (opt === currentWord.tr) style = "bg-green-100 border-green-500 text-green-800 scale-105 z-10";
+                    else if (opt === selectedOption) style = "bg-red-100 border-red-500 text-red-800 opacity-50";
+                    else style = "bg-white border-[#f5efe0] text-slate-300";
+                }
+                
+                return `
+                    <button ${isAnswered ? 'disabled' : ''} onclick="handleOptionClick(${i})" class="p-6 rounded-2xl font-bold text-xl transition-all duration-300 shadow-sm ${style}">
+                        ${opt}
+                    </button>
+                `;
+            }).join('');
+
+            const nextButton = isAnswered ? `
+                <button onclick="nextAction()" class="w-full mt-10 bg-[#5d4037] text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-[#4e342e] transition-all shadow-xl animate-[fadeIn_0.3s_ease-out_forwards]">
+                    ${currentWordIndex === wordList.length - 1 ? "Sonuçları Gör" : "Sıradaki Kelime"} <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            ` : '';
+
+            const audioIcon = audioLoadingFor === currentWord.ar 
+                ? `<i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i>` 
+                : `<i data-lucide="volume-2" class="w-6 h-6"></i>`;
+
+            return `
+                <div class="flex flex-col items-center justify-center p-4 min-h-screen w-full">
+                    <div class="max-w-2xl w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border-4 border-[#e5d5b3]">
+                        <div class="h-3 bg-[#f5efe0] w-full">
+                            <div class="h-full bg-amber-500 transition-all duration-500" style="width: ${progressPct}%"></div>
+                        </div>
+                        <div class="p-8 md:p-12">
+                            <div class="flex justify-between items-center mb-12">
+                                <div class="bg-amber-100 px-4 py-1 rounded-full text-amber-700 text-sm font-bold">Skor: ${score}</div>
+                                <div class="text-[#8b7355] font-bold">Soru ${currentWordIndex + 1} / ${wordList.length}</div>
+                            </div>
+
+                            <div class="text-center mb-12 space-y-4">
+                                <div class="flex items-center justify-center gap-6">
+                                    <button onclick="playAudio('${currentWord.ar}')" ${audioLoadingFor === currentWord.ar ? 'disabled' : ''} class="p-4 bg-[#fcf9f2] text-[#8b7355] rounded-full hover:scale-110 transition-transform shadow-sm disabled:opacity-50">
+                                        ${audioIcon}
+                                    </button>
+                                    <h2 class="text-7xl font-bold text-[#5d4037] tracking-widest drop-shadow-sm" dir="rtl">${currentWord.ar}</h2>
+                                </div>
+                                <p class="text-[#8d6e63] font-medium tracking-wide">${currentWord.type} — <span class="italic">${currentWord.freq}</span></p>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                ${optionsHtml}
+                            </div>
+
+                            ${nextButton}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderResultView() {
+            const listHtml = wordList.map((word, idx) => {
+                const isAudioLoading = audioLoadingFor === word.ar;
+                const audioIcon = isAudioLoading ? `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>` : `<i data-lucide="volume-2" class="w-5 h-5"></i>`;
+                
+                let insightBlock = '';
+                if (aiInsights[word.ar]) {
+                    insightBlock = `
+                        <div class="bg-[#fcf9f2] p-5 rounded-xl text-[#5d4037] border-l-4 border-amber-400 whitespace-pre-wrap leading-relaxed text-left" dir="ltr">
+                            ${aiInsights[word.ar]}
+                        </div>
+                    `;
+                } else {
+                    const isInsightLoading = loadingInsightFor === word.ar;
+                    const insightIcon = isInsightLoading ? `<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline-block"></i>` : `<i data-lucide="sparkles" class="w-4 h-4 inline-block"></i>`;
+                    insightBlock = `
+                        <button onclick="generateVerseInsight(${idx})" ${isInsightLoading ? 'disabled' : ''} class="w-full py-4 border-2 border-dashed border-[#e5d5b3] text-[#8b7355] rounded-xl font-bold hover:bg-[#fcf9f2] flex items-center justify-center gap-2 transition-all disabled:opacity-50">
+                            ${insightIcon} Yapay Zeka ile Ayet Örneği Getir
+                        </button>
+                    `;
+                }
+
+                return `
+                    <div class="bg-white p-8 rounded-2xl border-2 border-[#e5d5b3] shadow-sm space-y-4">
+                        <div class="flex justify-between items-center border-b pb-4 border-[#f5efe0]">
+                            <div class="flex items-center gap-3">
+                                <button onclick="playAudio('${word.ar}')" ${isAudioLoading ? 'disabled' : ''} class="p-2 bg-[#fcf9f2] text-[#8b7355] rounded-lg hover:bg-amber-50 disabled:opacity-50">
+                                    ${audioIcon}
+                                </button>
+                                <span class="text-4xl font-bold text-[#5d4037] tracking-wider" dir="rtl">${word.ar}</span>
+                            </div>
+                            <div class="text-left">
+                                <span class="block text-xl font-bold text-[#8b7355]">${word.tr}</span>
+                                <span class="text-xs text-slate-400">${word.type} | ${word.freq}</span>
+                            </div>
+                        </div>
+                        ${insightBlock}
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="py-12 px-4 w-full h-full min-h-screen">
+                    <div class="max-w-5xl mx-auto space-y-8 text-right">
+                        <div class="bg-white rounded-[2rem] shadow-md border-2 border-[#e5d5b3] p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div class="flex items-center gap-6 order-2 md:order-1">
+                                <div class="text-left">
+                                    <h2 class="text-3xl font-bold text-[#5d4037]">Tebrikler! ${score} / ${wordList.length}</h2>
+                                    <p class="text-[#8d6e63]">Rabbimiz ilminizi artırsın.</p>
+                                </div>
+                                <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center border-4 border-amber-200">
+                                    <i data-lucide="star" class="w-10 h-10 fill-current"></i>
+                                </div>
+                            </div>
+                            <button onclick="resetGame()" class="p-4 bg-[#5d4037] text-white rounded-full hover:scale-110 transition-all order-1 md:order-2">
+                                <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-6">
+                            <h3 class="text-2xl font-bold text-[#5d4037] flex items-center gap-2 justify-end">
+                                Kelime Analizleri ve Ayet Örnekleri <i data-lucide="book" class="w-6 h-6"></i>
+                            </h3>
+                            ${listHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (gameState === 'start') {
+                app.innerHTML = renderStartView();
+            } else if (gameState === 'quiz') {
+                app.innerHTML = renderQuizView();
+            } else if (gameState === 'result') {
+                app.innerHTML = renderResultView();
+            }
+
+            // Initialize Lucide icons on newly created HTML
+            lucide.createIcons();
+        }
+
+        // Initialize application
+        render();
+
+    </script>
+</body>
+</html>
